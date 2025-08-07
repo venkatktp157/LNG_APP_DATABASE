@@ -1441,7 +1441,7 @@ if auth_status:
         # Display final DataFrame
         st.dataframe(df)
 
-        df = df.fillna(0)    # fill not filled columns with 0
+        # df = df.fillna(0)    # fill not filled columns with 0
 
         # # Create a DataFrame with all columns initialized to 0
         # df = pd.DataFrame(0, index=[0], columns=columns)
