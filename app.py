@@ -1438,7 +1438,7 @@ if auth_status:
             # Manual refresh button
             if st.button("🔄 Refresh Data"):
                 st.cache_data.clear()
-                st.experimental_rerun()
+                st.rerun()
 
             # Timestamp for clarity
             st.caption(f"Last updated: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}")
