@@ -1356,18 +1356,18 @@ if auth_status:
         # Connect to Supabase
         supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-        st.markdown("""Following columns will be manual inputs in excel sheet: <br>
-        1. Date. Tag name: Date <br>
-        2. BDN (Quantity of LNG supplied). Tag name: BDN <br>
-        3. Consumptions (ME, F.vap, GE, Boiler) Tag names: ME_cons, F.vap_cons, GE_cons, BLR_cons <br>
-        4. Tank's condition (Level, Temp, Press.) Tag names: Level_TK1, Vap_temp_TK1, Liq_temp_TK1, Press_TK1 <br>
-        If the vessel has more than one LNG Tank, include Tag names: Level_TK2, Vap_temp_TK2, Liq_temp_TK2, Press_TK2 <br>
-        5. Vessel condition (List, Trim) Tag names: List, Trim.  
-        Initial value only for 1st row to be manually entered before uploading the sheet for LNG compositions listed below. <br>
-        6. Supplied LNG compositions in % Tag names: CH4,C2H6,C3H8,i-C4H10,n-C4H10,i-C5H12,n-C5H12,n-C6H14+,N2. <br>
-        7. Current compositions suffix 'c': CH4c,C2H6c,C3H8c,i-C4H10c,n-C4H10c,i-C5H12c,n-C5H12c,n-C6H14+c,N2c. <br>
-        8. Each mass composition suffix 'm': CH4m,C2H6m,C3H8m,i-C4H10m,n-C4H10m,i-C5H12m,n-C5H12m,n-C6H14+m,N2m.       
-        """, unsafe_allow_html=True)
+        # st.markdown("""Following columns will be manual inputs in excel sheet: <br>
+        # 1. Date. Tag name: Date <br>
+        # 2. BDN (Quantity of LNG supplied). Tag name: BDN <br>
+        # 3. Consumptions (ME, F.vap, GE, Boiler) Tag names: ME_cons, F.vap_cons, GE_cons, BLR_cons <br>
+        # 4. Tank's condition (Level, Temp, Press.) Tag names: Level_TK1, Vap_temp_TK1, Liq_temp_TK1, Press_TK1 <br>
+        # If the vessel has more than one LNG Tank, include Tag names: Level_TK2, Vap_temp_TK2, Liq_temp_TK2, Press_TK2 <br>
+        # 5. Vessel condition (List, Trim) Tag names: List, Trim.  
+        # Initial value only for 1st row to be manually entered before uploading the sheet for LNG compositions listed below. <br>
+        # 6. Supplied LNG compositions in % Tag names: CH4,C2H6,C3H8,i-C4H10,n-C4H10,i-C5H12,n-C5H12,n-C6H14+,N2. <br>
+        # 7. Current compositions suffix 'c': CH4c,C2H6c,C3H8c,i-C4H10c,n-C4H10c,i-C5H12c,n-C5H12c,n-C6H14+c,N2c. <br>
+        # 8. Each mass composition suffix 'm': CH4m,C2H6m,C3H8m,i-C4H10m,n-C4H10m,i-C5H12m,n-C5H12m,n-C6H14+m,N2m.       
+        # """, unsafe_allow_html=True)
 
         # List of all column names from your dataset
         columns = [
@@ -1435,11 +1435,20 @@ if auth_status:
             # Reorder columns to match expected structure
             df = supabase_df[columns]
 
+            # Manual refresh button
+            if st.button("🔄 Refresh Data"):
+                st.cache_data.clear()
+                st.experimental_rerun()
+
+            # Timestamp for clarity
+            st.caption(f"Last updated: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+
         except Exception as e:
             st.error(f"Error fetching data from Supabase: {e}")
 
         # Display final DataFrame
-        st.dataframe(df)
+        # st.dataframe(df)
 
         # df = df.fillna(0)    # fill not filled columns with 0
 
