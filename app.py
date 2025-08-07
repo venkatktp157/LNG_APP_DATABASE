@@ -1415,7 +1415,7 @@ if auth_status:
         # Fetch data from Supabase
         @st.cache_data(ttl=60)
         def fetch_data():
-            response = supabase.table("public.tank_data").select("*").execute()
+            response = supabase.table("tank_data").select("*").execute()
             df = pd.DataFrame(response.data)
             return df
         
