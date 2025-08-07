@@ -1441,7 +1441,7 @@ if auth_status:
                 st.rerun()
 
             # Timestamp for clarity
-            st.caption(f"Last updated: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            st.caption(f"Last updated UTC: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 
         except Exception as e:
