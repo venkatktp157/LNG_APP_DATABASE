@@ -2305,58 +2305,30 @@ if auth_status:
 
         def refresh_supabase_csv(new_df):
             import io
-            import pandas as pd
             from datetime import datetime
 
             bucket = "cal-tank-data"
             filename = "calculated_data.csv"
 
-            # Add timestamp
+            # Add timestamp to each row
             new_df["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            try:
-                existing = supabase.storage.from_(bucket).download(filename)
-                existing_df = pd.read_csv(io.BytesIO(existing))
-            except Exception:
-                existing_df = pd.DataFrame()
-
-            # Normalize column names
-            existing_df.columns = [str(col).strip() for col in existing_df.columns]
-            new_df.columns = [str(col).strip() for col in new_df.columns]
-
-            # Fallback if empty
-            if existing_df.empty:
-                existing_df = pd.DataFrame(columns=new_df.columns)
-
-            # Debug: Show columns
-            st.write("existing_df columns:", existing_df.columns.tolist())
-            st.write("new_df columns:", new_df.columns.tolist())
-
-            # Use 'Date' as key for deduplication
-            key_column = "Date"
-            if key_column not in existing_df.columns or key_column not in new_df.columns:
-                st.error(f"Missing '{key_column}' column in one of the datasets.")
-                return
-
-            # Merge and filter new rows
-            merged_df = pd.merge(new_df, existing_df, on=key_column, how='left', indicator=True)
-            new_rows = merged_df[merged_df['_merge'] == 'left_only'].drop(columns=['_merge'])
-
-            # Auto-generate 'id' for upload
-            new_rows = new_rows.reset_index(drop=True)
-            new_rows['id'] = new_rows.index + 1
-
-            # Combine and upload
-            combined_df = pd.concat([existing_df, new_rows], ignore_index=True)
-
+            # Convert DataFrame to CSV
             csv_buffer = io.StringIO()
-            combined_df.to_csv(csv_buffer, index=False)
+            new_df.to_csv(csv_buffer, index=False)
             csv_bytes = csv_buffer.getvalue().encode("utf-8")
 
+            # Overwrite existing file in Supabase Storage
             try:
-                supabase.storage.from_(bucket).update(filename, csv_bytes)
-            except Exception:
-                supabase.storage.from_(bucket).upload(filename, csv_bytes)
+                supabase.storage.from_(bucket).upload(
+                    filename,
+                    csv_bytes,
+                    {"content-type": "text/csv"},
+                    upsert=True  # Ensures overwrite
+                )
+                st.success("Supabase CSV overwritten successfully.")
+            except Exception as e:
+                st.error(f"Upload failed: {e}")
 
         # 🖱️ Upload trigger
         if st.button("📤 Upload Calculated CSV to Supabase"):
