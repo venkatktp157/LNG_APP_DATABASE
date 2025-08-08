@@ -1349,11 +1349,17 @@ if auth_status:
         # uploaded_file = st.file_uploader("Upload your tank measurement data (CSV or Excel)", 
         #                         type=["csv", "xlsx"])
         
-        # Supabase credentials from secrets
-        SUPABASE_URL = st.secrets["SUPABASE_URL"]
-        SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+        # Supabase credentials from secrets (for anon public)
+        # SUPABASE_URL = st.secrets["SUPABASE_URL"]
+        # SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
-        # Connect to Supabase
+        # # Connect to Supabase
+        # supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+        # service level key (bypasses RLS in supabase)
+        SUPABASE_URL = st.secrets["supabase"]["url"]
+        SUPABASE_KEY = st.secrets["supabase"]["service_role_key"]
+
         supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
         # st.markdown("""Following columns will be manual inputs in excel sheet: <br>
