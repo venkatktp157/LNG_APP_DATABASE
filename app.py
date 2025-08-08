@@ -2321,6 +2321,15 @@ if auth_status:
             except Exception:
                 existing_df = pd.DataFrame()
 
+            # Strip column names
+            existing_df.columns = existing_df.columns.str.strip()
+            new_df.columns = new_df.columns.str.strip()    
+
+            # Check if 'Date' exists
+            if "Date" not in existing_df.columns or "Date" not in new_df.columns:
+                st.error("Missing 'Date' column in one of the datasets.")
+                return
+
             # Ensure 'Date' column is datetime
             existing_df["Date"] = pd.to_datetime(existing_df["Date"], errors="coerce")
             new_df["Date"] = pd.to_datetime(new_df["Date"], errors="coerce")
