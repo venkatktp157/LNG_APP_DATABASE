@@ -2280,13 +2280,7 @@ if auth_status:
             file_name=f"LNG_calculations_{ship_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
             mime='text/csv'
         )
-
-        if st.button("Upload to Supabase"):
-            for _, row in df.iterrows():
-                supabase.table("tank_data").insert(row.to_dict()).execute()
-            st.success("Data uploaded to Supabase!")
-
-
+        
         #----------------------------------------------------------------------------------------------------------
         
         #Date filter for dataet for visualisations:
