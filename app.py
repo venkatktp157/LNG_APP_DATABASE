@@ -2322,8 +2322,9 @@ if auth_status:
                 existing_df = pd.DataFrame()
 
             # Strip column names
-            existing_df.columns = existing_df.columns.str.strip()
-            new_df.columns = new_df.columns.str.strip()    
+            existing_df.columns = [str(col).strip() for col in existing_df.columns]
+
+            new_df.columns = [str(col).strip() for col in new_df.columns]
 
             # Check if 'Date' exists
             if "Date" not in existing_df.columns or "Date" not in new_df.columns:
