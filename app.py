@@ -2304,17 +2304,35 @@ if auth_status:
         new_df["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         def refresh_supabase_csv(new_df):
+            import io
+            import pandas as pd
+            from datetime import datetime
+
             bucket = "cal-tank-data"
             filename = "calculated_data.csv"
 
+            # Add timestamp to new rows
+            new_df["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
             try:
+                # Download existing CSV
                 existing = supabase.storage.from_(bucket).download(filename)
                 existing_df = pd.read_csv(io.BytesIO(existing))
             except Exception:
                 existing_df = pd.DataFrame()
 
-            combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+            # Ensure 'Date' column is datetime
+            existing_df["Date"] = pd.to_datetime(existing_df["Date"], errors="coerce")
+            new_df["Date"] = pd.to_datetime(new_df["Date"], errors="coerce")
 
+            # Filter only new rows
+            latest_date = existing_df["Date"].max() if not existing_df.empty else pd.Timestamp.min
+            filtered_df = new_df[new_df["Date"] > latest_date]
+
+            # Append only new rows
+            combined_df = pd.concat([existing_df, filtered_df], ignore_index=True)
+
+            # Save and upload
             csv_buffer = io.StringIO()
             combined_df.to_csv(csv_buffer, index=False)
             csv_bytes = csv_buffer.getvalue().encode("utf-8")
