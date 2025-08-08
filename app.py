@@ -2272,7 +2272,19 @@ if auth_status:
         # Display results
         st.write("### Calculation Results")
 
-        # Download button
+        import io
+        import pandas as pd
+        from datetime import datetime
+
+        # 🧼 Sanitize df2 before display or upload
+        def sanitize_dataframe(df):
+            for col in df.select_dtypes(include=["object"]).columns:
+                df[col] = df[col].apply(lambda x: str(x) if isinstance(x, (list, dict)) else x)
+            return df
+
+        df2 = sanitize_dataframe(df2)
+
+        # 📥 Download button
         csv = df2.to_csv(index=False)
         st.download_button(
             label="Download results as CSV",
@@ -2281,48 +2293,32 @@ if auth_status:
             mime='text/csv'
         )
 
-        #codes for pushing the calculated tank data in lng app to supabase storage
-        new_df = df2.copy()  # or whatever your final calculated DataFrame is
-
-        # Fix non-serializable columns
-        new_df["k1_TK1"] = new_df["k1_TK1"].apply(lambda x: str(x) if isinstance(x, (list, dict)) else x)
-
-        for col in new_df.select_dtypes(include=["object"]).columns:
-            new_df[col] = new_df[col].apply(lambda x: str(x) if isinstance(x, (list, dict)) else x)
-
-        import io
-        import pandas as pd
-        from datetime import datetime
+        # 📤 Prepare for Supabase upload
+        new_df = df2.copy()
+        new_df["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         def refresh_supabase_csv(new_df):
             bucket = "cal-tank-data"
             filename = "calculated_data.csv"
 
-            # Add timestamp to each row
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            new_df["timestamp"] = timestamp
-
             try:
-                # Download existing CSV
                 existing = supabase.storage.from_(bucket).download(filename)
                 existing_df = pd.read_csv(io.BytesIO(existing))
             except Exception:
                 existing_df = pd.DataFrame()
 
-            # Append new data
             combined_df = pd.concat([existing_df, new_df], ignore_index=True)
 
-            # Save to buffer
             csv_buffer = io.StringIO()
             combined_df.to_csv(csv_buffer, index=False)
             csv_bytes = csv_buffer.getvalue().encode("utf-8")
 
-            # Upload or update file
             try:
                 supabase.storage.from_(bucket).update(filename, csv_bytes)
             except Exception:
                 supabase.storage.from_(bucket).upload(filename, csv_bytes)
 
+        # 🖱️ Upload trigger
         if st.button("📤 Upload Calculated CSV to Supabase"):
             refresh_supabase_csv(new_df)
             st.success("CSV updated in Supabase Storage!")
