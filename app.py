@@ -2284,6 +2284,12 @@ if auth_status:
         #codes for pushing the calculated tank data in lng app to supabase storage
         new_df = df2.copy()  # or whatever your final calculated DataFrame is
 
+        # Fix non-serializable columns
+        new_df["k1_TK1"] = new_df["k1_TK1"].apply(lambda x: str(x) if isinstance(x, (list, dict)) else x)
+
+        for col in new_df.select_dtypes(include=["object"]).columns:
+            new_df[col] = new_df[col].apply(lambda x: str(x) if isinstance(x, (list, dict)) else x)
+
         import io
         import pandas as pd
         from datetime import datetime
@@ -2320,7 +2326,7 @@ if auth_status:
         if st.button("📤 Upload Calculated CSV to Supabase"):
             refresh_supabase_csv(new_df)
             st.success("CSV updated in Supabase Storage!")
-               
+
         #----------------------------------------------------------------------------------------------------------
         
         #Date filter for dataet for visualisations:
