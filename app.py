@@ -2280,7 +2280,47 @@ if auth_status:
             file_name=f"LNG_calculations_{ship_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
             mime='text/csv'
         )
-        
+
+        #codes for pushing the calculated tank data in lng app to supabase storage
+        new_df = df2.copy()  # or whatever your final calculated DataFrame is
+
+        import io
+        import pandas as pd
+        from datetime import datetime
+
+        def refresh_supabase_csv(new_df):
+            bucket = "cal-tank-data"
+            filename = "calculated_data.csv"
+
+            # Add timestamp to each row
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            new_df["timestamp"] = timestamp
+
+            try:
+                # Download existing CSV
+                existing = supabase.storage.from_(bucket).download(filename)
+                existing_df = pd.read_csv(io.BytesIO(existing))
+            except Exception:
+                existing_df = pd.DataFrame()
+
+            # Append new data
+            combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+
+            # Save to buffer
+            csv_buffer = io.StringIO()
+            combined_df.to_csv(csv_buffer, index=False)
+            csv_bytes = csv_buffer.getvalue().encode("utf-8")
+
+            # Upload or update file
+            try:
+                supabase.storage.from_(bucket).update(filename, csv_bytes)
+            except Exception:
+                supabase.storage.from_(bucket).upload(filename, csv_bytes)
+
+        if st.button("📤 Upload Calculated CSV to Supabase"):
+            refresh_supabase_csv(new_df)
+            st.success("CSV updated in Supabase Storage!")
+               
         #----------------------------------------------------------------------------------------------------------
         
         #Date filter for dataet for visualisations:
