@@ -2321,9 +2321,20 @@ if auth_status:
             except Exception:
                 existing_df = pd.DataFrame()
 
-            # Strip column names
+            if existing_df.empty:
+                existing_df = pd.DataFrame(columns=new_df.columns)    
+           
+            # Debug: Print column names
+            st.write("existing_df columns:", existing_df.columns.tolist())
+            st.write("new_df columns:", new_df.columns.tolist())
+
+            # Normalize column names
             existing_df.columns = [str(col).strip() for col in existing_df.columns]
             new_df.columns = [str(col).strip() for col in new_df.columns]
+
+            if 'id' not in new_df.columns:
+                new_df.reset_index(inplace=True)
+                new_df.rename(columns={'index': 'id'}, inplace=True)
 
             # Check if 'id' exists
             if "id" not in existing_df.columns or "id" not in new_df.columns:
