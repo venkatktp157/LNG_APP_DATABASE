@@ -2310,25 +2310,25 @@ if auth_status:
             bucket = "cal-tank-data"
             filename = "calculated_data.csv"
 
-            # Add timestamp to each row
+            # Add timestamp
             new_df["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            # Convert DataFrame to CSV
+            # Convert to CSV
             csv_buffer = io.StringIO()
             new_df.to_csv(csv_buffer, index=False)
             csv_bytes = csv_buffer.getvalue().encode("utf-8")
 
-            # Overwrite existing file in Supabase Storage
+            # Overwrite by re-uploading to same path
             try:
                 supabase.storage.from_(bucket).upload(
                     filename,
                     csv_bytes,
-                    {"content-type": "text/csv"},
-                    upsert=True  # Ensures overwrite
+                    {"content-type": "text/csv"}
                 )
-                st.success("Supabase CSV overwritten successfully.")
+                st.success("CSV overwritten in Supabase Storage.")
             except Exception as e:
                 st.error(f"Upload failed: {e}")
+
 
         # 🖱️ Upload trigger
         if st.button("📤 Upload Calculated CSV to Supabase"):
