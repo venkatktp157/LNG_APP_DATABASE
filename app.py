@@ -2323,21 +2323,20 @@ if auth_status:
 
             # Strip column names
             existing_df.columns = [str(col).strip() for col in existing_df.columns]
-
             new_df.columns = [str(col).strip() for col in new_df.columns]
 
-            # Check if 'Date' exists
-            if "Date" not in existing_df.columns or "Date" not in new_df.columns:
-                st.error("Missing 'Date' column in one of the datasets.")
+            # Check if 'id' exists
+            if "id" not in existing_df.columns or "id" not in new_df.columns:
+                st.error("Missing 'id' column in one of the datasets.")
                 return
 
-            # Ensure 'Date' column is datetime
-            existing_df["Date"] = pd.to_datetime(existing_df["Date"], errors="coerce")
-            new_df["Date"] = pd.to_datetime(new_df["Date"], errors="coerce")
+            # Ensure 'id' is numeric
+            existing_df["id"] = pd.to_numeric(existing_df["id"], errors="coerce")
+            new_df["id"] = pd.to_numeric(new_df["id"], errors="coerce")
 
             # Filter only new rows
-            latest_date = existing_df["Date"].max() if not existing_df.empty else pd.Timestamp.min
-            filtered_df = new_df[new_df["Date"] > latest_date]
+            latest_id = existing_df["id"].max() if not existing_df.empty else -1
+            filtered_df = new_df[new_df["id"] > latest_id]
 
             # Append only new rows
             combined_df = pd.concat([existing_df, filtered_df], ignore_index=True)
@@ -2384,8 +2383,7 @@ if auth_status:
                 else:
                     # Display the filtered DataFrame
                     st.markdown('**1.1. Glimpse of dataset**')
-                    st.write(df3)
-    
+                    st.write(df3)    
         
         #--------------------------------------------------------------------------------------------------------------
         #Plotting MN and Min_MN
