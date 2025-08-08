@@ -2281,6 +2281,12 @@ if auth_status:
             mime='text/csv'
         )
 
+        if st.button("Upload to Supabase"):
+            for _, row in df.iterrows():
+                supabase.table("tank_data").insert(row.to_dict()).execute()
+            st.success("Data uploaded to Supabase!")
+
+
         #----------------------------------------------------------------------------------------------------------
         
         #Date filter for dataet for visualisations:
