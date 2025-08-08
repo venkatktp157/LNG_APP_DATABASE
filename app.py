@@ -2318,8 +2318,11 @@ if auth_status:
             new_df.to_csv(csv_buffer, index=False)
             csv_bytes = csv_buffer.getvalue().encode("utf-8")
 
-            # Overwrite by re-uploading to same path
             try:
+                # Step 1: Delete existing file
+                supabase.storage.from_(bucket).remove([filename])
+
+                # Step 2: Upload new file
                 supabase.storage.from_(bucket).upload(
                     filename,
                     csv_bytes,
