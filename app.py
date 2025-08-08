@@ -2311,48 +2311,44 @@ if auth_status:
             bucket = "cal-tank-data"
             filename = "calculated_data.csv"
 
-            # Add timestamp to new rows
+            # Add timestamp
             new_df["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             try:
-                # Download existing CSV
                 existing = supabase.storage.from_(bucket).download(filename)
                 existing_df = pd.read_csv(io.BytesIO(existing))
             except Exception:
                 existing_df = pd.DataFrame()
 
-            if existing_df.empty:
-                existing_df = pd.DataFrame(columns=new_df.columns)    
-           
-            # Debug: Print column names
-            st.write("existing_df columns:", existing_df.columns.tolist())
-            st.write("new_df columns:", new_df.columns.tolist())
-
             # Normalize column names
             existing_df.columns = [str(col).strip() for col in existing_df.columns]
             new_df.columns = [str(col).strip() for col in new_df.columns]
 
-            if 'id' not in new_df.columns:
-                new_df.reset_index(inplace=True)
-                new_df.rename(columns={'index': 'id'}, inplace=True)
+            # Fallback if empty
+            if existing_df.empty:
+                existing_df = pd.DataFrame(columns=new_df.columns)
 
-            # Check if 'id' exists
-            if "id" not in existing_df.columns or "id" not in new_df.columns:
-                st.error("Missing 'id' column in one of the datasets.")
+            # Debug: Show columns
+            st.write("existing_df columns:", existing_df.columns.tolist())
+            st.write("new_df columns:", new_df.columns.tolist())
+
+            # Use 'Date' as key for deduplication
+            key_column = "Date"
+            if key_column not in existing_df.columns or key_column not in new_df.columns:
+                st.error(f"Missing '{key_column}' column in one of the datasets.")
                 return
 
-            # Ensure 'id' is numeric
-            existing_df["id"] = pd.to_numeric(existing_df["id"], errors="coerce")
-            new_df["id"] = pd.to_numeric(new_df["id"], errors="coerce")
+            # Merge and filter new rows
+            merged_df = pd.merge(new_df, existing_df, on=key_column, how='left', indicator=True)
+            new_rows = merged_df[merged_df['_merge'] == 'left_only'].drop(columns=['_merge'])
 
-            # Filter only new rows
-            latest_id = existing_df["id"].max() if not existing_df.empty else -1
-            filtered_df = new_df[new_df["id"] > latest_id]
+            # Auto-generate 'id' for upload
+            new_rows = new_rows.reset_index(drop=True)
+            new_rows['id'] = new_rows.index + 1
 
-            # Append only new rows
-            combined_df = pd.concat([existing_df, filtered_df], ignore_index=True)
+            # Combine and upload
+            combined_df = pd.concat([existing_df, new_rows], ignore_index=True)
 
-            # Save and upload
             csv_buffer = io.StringIO()
             combined_df.to_csv(csv_buffer, index=False)
             csv_bytes = csv_buffer.getvalue().encode("utf-8")
