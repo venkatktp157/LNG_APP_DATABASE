@@ -1008,16 +1008,20 @@ if auth_status:
                 except Exception as e:
                     st.error(f"Upload failed: {e}")
 
-            # 🖱️ Upload trigger
             uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
-            # 🚀 Upload trigger
             if uploaded_file:
                 st.write(f"Selected file: {uploaded_file.name}")
-                pdf_bytes = uploaded_file.read()
 
                 if st.button("📤 Upload PDF to Supabase"):
-                    upload_pdf_to_supabase(pdf_bytes, filename=uploaded_file.name)
+                    pdf_bytes = uploaded_file.read()
+                    try:
+                        response = upload_pdf_to_supabase(pdf_bytes, filename=uploaded_file.name)
+                        st.success(f"✅ Uploaded {uploaded_file.name} successfully!")
+                        st.write(response)
+                    except Exception as e:
+                        st.error(f"❌ Upload failed: {e}")
+
     #---------------------------------------------------------------------------------------------------------------------------------
     # PKI MN CALCULATIONS
 
