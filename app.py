@@ -975,66 +975,47 @@ if auth_status:
                 "Net Quantity (m³)": round(net_qty, 2),
                 "Difference (m³)": round(diff, 2),
             }
+
+            # Generate PDF
+            pdf_buffer = generate_pdf(inputs, results)
+
+            # Download PDF
+            st.download_button(
+                label="📄 Download PDF Report",
+                data=pdf_buffer,
+                file_name="lng_bunkering_report.pdf",
+                mime="application/pdf",
+            )  
             
             from supabase import create_client
-            from datetime import datetime
-            import streamlit as st
-
+                        
             # 🔐 Supabase credentials
             SUPABASE_URL = st.secrets["supabase"]["url"]
             SUPABASE_KEY = st.secrets["supabase"]["service_role_key"]
             supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-            # 📤 Supabase upload function
-            def upload_pdf_to_supabase(pdf_bytes, filename):
+            def upload_pdf_to_supabase(pdf_bytes, filename="lng_bunkering_report.pdf"):
                 bucket = "pdf-reports"
+
                 try:
-                    response = supabase.storage.from_(bucket).upload(
+                    # Upload without deleting old file
+                    supabase.storage.from_(bucket).upload(
                         filename,
                         pdf_bytes,
                         {"content-type": "application/pdf"}
                     )
-                    st.success(f"✅ PDF uploaded as '{filename}'")
-                    return response
+                    st.success("PDF uploaded to Supabase Storage.")
                 except Exception as e:
-                    st.error(f"❌ Upload failed: {e}")
-                    return None
+                    st.error(f"Upload failed: {e}")
 
-            # 🧠 Initialize session state
-            if "pdf_buffer" not in st.session_state:
-                st.session_state.pdf_buffer = None
-            if "pdf_ready" not in st.session_state:
-                st.session_state.pdf_ready = False
+            # 🖱️ Upload trigger
+            uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
-            # 🧾 Generate PDF
-            if st.button("🧾 Generate PDF Report"):
-                inputs = {"Fuel Type": "LNG", "Quantity": 5000, "Port": "Singapore"}  # Replace with actual inputs
-                results = {"Methane Number": 78.5, "CO2 Reduction": "12%"}            # Replace with actual results
-                pdf_buffer = generate_pdf(inputs, results)
-                if pdf_buffer:
-                    st.session_state.pdf_buffer = pdf_buffer
-                    st.session_state.pdf_ready = True
-                else:
-                    st.error("⚠️ PDF generation failed.")
-                    st.session_state.pdf_ready = False
-
-            # ✅ Show download and upload buttons
-            if st.session_state.pdf_ready and st.session_state.pdf_buffer:
-                st.write("PDF buffer size:", len(st.session_state.pdf_buffer.getvalue()))
-
-                st.download_button(
-                    label="📄 Download PDF",
-                    data=st.session_state.pdf_buffer,
-                    file_name="lng_bunkering_report.pdf",
-                    mime="application/pdf",
-                )
-
-                filename = f"lng_bunkering_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                st.write("Filename:", filename)
-
-                if st.button("📤 Upload to Supabase"):
-                    response = upload_pdf_to_supabase(st.session_state.pdf_buffer.getvalue(), filename)
-                    st.write("Upload response:", response)
+            if uploaded_file is not None:
+                pdf_bytes = uploaded_file.read()
+                if st.button("📤 Upload PDF to Supabase"):
+                    upload_pdf_to_supabase(pdf_bytes, filename=uploaded_file.name)
+           
                 #---------------------------------------------------------------------------------------------------------------------------------
     # PKI MN CALCULATIONS
 
