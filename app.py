@@ -1006,14 +1006,16 @@ if auth_status:
 
             # 🧾 Generate PDF Report
             if st.button("🧾 Generate PDF Report"):
-                pdf_bytes = generate_pdf(inputs, results)
-                st.session_state.pdf_buffer = pdf_bytes
+                st.session_state.pdf_buffer = generate_pdf(inputs, results)
                 st.session_state.pdf_ready = True
 
-            st.write("PDF buffer size:", len(pdf_bytes.getvalue()))   
-
-            # ✅ Show buttons only if PDF is ready
             if st.session_state.get("pdf_ready"):
+                st.write("PDF buffer size:", len(st.session_state.pdf_buffer.getvalue()))           
+
+            # ✅ Confirm buffer size (safe across reruns)
+            if st.session_state.get("pdf_ready"):
+                st.write("PDF buffer size:", len(st.session_state.pdf_buffer.getvalue()))
+
                 st.download_button(
                     label="📄 Download PDF",
                     data=st.session_state.pdf_buffer,
@@ -1027,8 +1029,6 @@ if auth_status:
                 if st.button("📤 Upload to Supabase"):
                     response = upload_pdf_to_supabase(st.session_state.pdf_buffer.getvalue(), filename)
                     st.write("Upload response:", response)
-
-            st.write("Supabase response:", response)       
 
     #---------------------------------------------------------------------------------------------------------------------------------
     # PKI MN CALCULATIONS
