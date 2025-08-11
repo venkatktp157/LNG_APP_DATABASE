@@ -987,40 +987,40 @@ if auth_status:
                 mime="application/pdf",
             )  
             
-            from supabase import create_client
-                        
-            # 🔐 Supabase credentials
-            SUPABASE_URL = st.secrets["supabase"]["url"]
-            SUPABASE_KEY = st.secrets["supabase"]["service_role_key"]
-            supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        from supabase import create_client
+                    
+        # 🔐 Supabase credentials
+        SUPABASE_URL = st.secrets["supabase"]["url"]
+        SUPABASE_KEY = st.secrets["supabase"]["service_role_key"]
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-            def upload_pdf_to_supabase(pdf_bytes, filename="lng_bunkering_report.pdf"):
-                bucket = "pdf-reports"
+        def upload_pdf_to_supabase(pdf_bytes, filename="lng_bunkering_report.pdf"):
+            bucket = "pdf-reports"
+            try:
+                # Upload without deleting old file
+                response = supabase.storage.from_(bucket).upload(
+                    filename,
+                    pdf_bytes,
+                    {"content-type": "application/pdf"}
+                )
+                st.success("PDF uploaded to Supabase Storage.")
+                st.write("Upload response:", response)
+            except Exception as e:
+                st.error(f"Upload failed: {e}")
+
+        uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
+
+        if uploaded_file:
+            st.write(f"Selected file: {uploaded_file.name}")
+
+            if st.button("📤 Upload PDF to Supabase"):
+                pdf_bytes = uploaded_file.read()
                 try:
-                    # Upload without deleting old file
-                    response = supabase.storage.from_(bucket).upload(
-                        filename,
-                        pdf_bytes,
-                        {"content-type": "application/pdf"}
-                    )
-                    st.success("PDF uploaded to Supabase Storage.")
-                    st.write("Upload response:", response)
+                    response = upload_pdf_to_supabase(pdf_bytes, filename=uploaded_file.name)
+                    st.success(f"✅ Uploaded {uploaded_file.name} successfully!")
+                    st.write(response)
                 except Exception as e:
-                    st.error(f"Upload failed: {e}")
-
-            uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
-
-            if uploaded_file:
-                st.write(f"Selected file: {uploaded_file.name}")
-
-                if st.button("📤 Upload PDF to Supabase"):
-                    pdf_bytes = uploaded_file.read()
-                    try:
-                        response = upload_pdf_to_supabase(pdf_bytes, filename=uploaded_file.name)
-                        st.success(f"✅ Uploaded {uploaded_file.name} successfully!")
-                        st.write(response)
-                    except Exception as e:
-                        st.error(f"❌ Upload failed: {e}")
+                    st.error(f"❌ Upload failed: {e}")
 
     #---------------------------------------------------------------------------------------------------------------------------------
     # PKI MN CALCULATIONS
