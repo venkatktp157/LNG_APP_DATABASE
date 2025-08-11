@@ -1006,13 +1006,13 @@ if auth_status:
             def upload_pdf_to_supabase(pdf_bytes, filename):
                 bucket = "pdf-reports"
                 try:
-                    supabase.storage.from_(bucket).upload(
+                    response = supabase.storage.from_(bucket).upload(
                         filename,
                         pdf_bytes,
                         {"content-type": "application/pdf"}
                     )
                     st.success(f"✅ PDF uploaded as '{filename}' to Supabase Storage.")
-                    st.write("Upload response:", response)  # 👈 Debug output
+                    st.write("Upload response:", response)  # 👈 Now response is defined
                 except Exception as e:
                     st.error(f"❌ Upload failed: {e}")
 
