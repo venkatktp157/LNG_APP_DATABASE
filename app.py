@@ -978,13 +978,14 @@ if auth_status:
             
             from supabase import create_client
             from datetime import datetime
+            import streamlit as st
 
-            # 🔐 Load Supabase credentials from secrets
+            # 🔐 Supabase credentials
             SUPABASE_URL = st.secrets["supabase"]["url"]
             SUPABASE_KEY = st.secrets["supabase"]["service_role_key"]
             supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-            # 📤 Function to upload PDF to Supabase Storage
+            # 📤 Upload function
             def upload_pdf_to_supabase(pdf_bytes, filename):
                 bucket = "pdf-reports"
                 try:
@@ -1003,12 +1004,13 @@ if auth_status:
                     st.error(f"❌ Upload failed: {e}")
                     return None
 
-            # 1️⃣ Generate PDF and store in session state
+            # 🧾 Generate PDF button
             if st.button("🧾 Generate PDF Report"):
                 st.session_state.pdf_buffer = generate_pdf(inputs, results)
+                st.session_state.pdf_ready = True
 
-            # 2️⃣ Show Download Button and Upload Trigger
-            if "pdf_buffer" in st.session_state and st.session_state.pdf_buffer:
+            # 📄 Show download and upload buttons only if PDF is ready
+            if st.session_state.get("pdf_ready", False):
                 st.download_button(
                     label="📄 Download PDF Report",
                     data=st.session_state.pdf_buffer,
@@ -1016,18 +1018,15 @@ if auth_status:
                     mime="application/pdf",
                 )
 
-                # 🕒 Generate timestamped filename
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 filename = f"lng_bunkering_report_{timestamp}.pdf"
                 st.write("Filename:", filename)
 
-                # 🚀 Upload Button
                 if st.button("📤 Upload PDF Report to Supabase"):
-                    st.write("Upload button clicked")  # Debug trace
+                    st.write("Upload button clicked")
                     response = upload_pdf_to_supabase(st.session_state.pdf_buffer.getvalue(), filename)
                     st.write("Upload response:", response)
-            else:
-                st.warning("⚠️ No PDF buffer found. Please generate or upload a PDF first.")            
+         
 
     #---------------------------------------------------------------------------------------------------------------------------------
     # PKI MN CALCULATIONS
