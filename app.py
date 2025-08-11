@@ -975,37 +975,50 @@ if auth_status:
                 "Net Quantity (m³)": round(net_qty, 2),
                 "Difference (m³)": round(diff, 2),
             }
-            # Generate PDF
-            pdf_buffer = generate_pdf(inputs, results)
+            # # Generate PDF
+            # pdf_buffer = generate_pdf(inputs, results)
 
-            # Download PDF
+            # # Download PDF
+            # st.download_button(
+            #     label="📄 Download PDF Report",
+            #     data=pdf_buffer,
+            #     file_name="lng_bunkering_report.pdf",
+            #     mime="application/pdf",
+            # )  
+
+            # 1️⃣ Generate PDF and store in session state
+            st.session_state.pdf_buffer = generate_pdf(inputs, results)
+
+            # 2️⃣ Show Download Button
             st.download_button(
                 label="📄 Download PDF Report",
-                data=pdf_buffer,
+                data=st.session_state.pdf_buffer,
                 file_name="lng_bunkering_report.pdf",
                 mime="application/pdf",
-            )  
+            )
 
-            # Upload to Supabase
-            def upload_pdf_to_supabase(pdf_bytes, filename="lng_bunkering_report.pdf"):
+            # 3️⃣ Timestamped Upload Button
+            from datetime import datetime
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"lng_bunkering_report_{timestamp}.pdf"
+
+            def upload_pdf_to_supabase(pdf_bytes, filename):
                 bucket = "pdf-reports"
                 try:
-                    # Optional: Delete existing file to overwrite
-                    supabase.storage.from_(bucket).remove([filename])
-
-                    # Upload new PDF
                     supabase.storage.from_(bucket).upload(
                         filename,
                         pdf_bytes,
                         {"content-type": "application/pdf"}
                     )
-                    st.success("PDF uploaded to Supabase Storage.")
+                    st.success(f"✅ PDF uploaded as '{filename}' to Supabase Storage.")
                 except Exception as e:
-                    st.error(f"Upload failed: {e}")
+                    st.error(f"❌ Upload failed: {e}")
 
-            # 🖱️ Upload trigger
+            # 4️⃣ Upload Trigger
             if st.button("📤 Upload PDF Report to Supabase"):
-                upload_pdf_to_supabase(pdf_buffer.getvalue())
+                upload_pdf_to_supabase(st.session_state.pdf_buffer.getvalue(), filename)
+
     #---------------------------------------------------------------------------------------------------------------------------------
     # PKI MN CALCULATIONS
 
