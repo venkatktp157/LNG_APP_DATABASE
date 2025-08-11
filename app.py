@@ -1004,29 +1004,31 @@ if auth_status:
                     st.error(f"❌ Upload failed: {e}")
                     return None
 
-            # 🧾 Generate PDF button
+            # 🧾 Generate PDF Report
             if st.button("🧾 Generate PDF Report"):
-                st.session_state.pdf_buffer = generate_pdf(inputs, results)
+                pdf_bytes = generate_pdf(inputs, results)
+                st.session_state.pdf_buffer = pdf_bytes
                 st.session_state.pdf_ready = True
 
-            # 📄 Show download and upload buttons only if PDF is ready
-            if st.session_state.get("pdf_ready", False):
+            st.write("PDF buffer size:", len(pdf_bytes.getvalue()))   
+
+            # ✅ Show buttons only if PDF is ready
+            if st.session_state.get("pdf_ready"):
                 st.download_button(
-                    label="📄 Download PDF Report",
+                    label="📄 Download PDF",
                     data=st.session_state.pdf_buffer,
                     file_name="lng_bunkering_report.pdf",
                     mime="application/pdf",
                 )
 
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"lng_bunkering_report_{timestamp}.pdf"
+                filename = f"lng_bunkering_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
                 st.write("Filename:", filename)
 
-                if st.button("📤 Upload PDF Report to Supabase"):
-                    st.write("Upload button clicked")
+                if st.button("📤 Upload to Supabase"):
                     response = upload_pdf_to_supabase(st.session_state.pdf_buffer.getvalue(), filename)
                     st.write("Upload response:", response)
-         
+
+            st.write("Supabase response:", response)       
 
     #---------------------------------------------------------------------------------------------------------------------------------
     # PKI MN CALCULATIONS
