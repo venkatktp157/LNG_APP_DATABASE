@@ -996,7 +996,6 @@ if auth_status:
 
             def upload_pdf_to_supabase(pdf_bytes, filename="lng_bunkering_report.pdf"):
                 bucket = "pdf-reports"
-
                 try:
                     # Upload without deleting old file
                     supabase.storage.from_(bucket).upload(
@@ -1005,18 +1004,21 @@ if auth_status:
                         {"content-type": "application/pdf"}
                     )
                     st.success("PDF uploaded to Supabase Storage.")
+                    st.write("Upload response:", response)
                 except Exception as e:
                     st.error(f"Upload failed: {e}")
 
             # 🖱️ Upload trigger
             uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
-            if uploaded_file is not None:
+            # 🚀 Upload trigger
+            if uploaded_file:
+                st.write(f"Selected file: {uploaded_file.name}")
                 pdf_bytes = uploaded_file.read()
+
                 if st.button("📤 Upload PDF to Supabase"):
                     upload_pdf_to_supabase(pdf_bytes, filename=uploaded_file.name)
-           
-                #---------------------------------------------------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------------------------------------------------------------
     # PKI MN CALCULATIONS
 
     elif mode == "Propane Knock Index (PKI), Methane Number, Density Calculator":
