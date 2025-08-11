@@ -975,28 +975,7 @@ if auth_status:
                 "Net Quantity (m³)": round(net_qty, 2),
                 "Difference (m³)": round(diff, 2),
             }
-            # # Generate PDF
-            # pdf_buffer = generate_pdf(inputs, results)
-
-            # # Download PDF
-            # st.download_button(
-            #     label="📄 Download PDF Report",
-            #     data=pdf_buffer,
-            #     file_name="lng_bunkering_report.pdf",
-            #     mime="application/pdf",
-            # )  
-
-            # 1️⃣ Generate PDF and store in session state
-            st.session_state.pdf_buffer = generate_pdf(inputs, results)
-
-            # 2️⃣ Show Download Button
-            st.download_button(
-                label="📄 Download PDF Report",
-                data=st.session_state.pdf_buffer,
-                file_name="lng_bunkering_report.pdf",
-                mime="application/pdf",
-            )
-
+            
             from supabase import create_client
             from datetime import datetime
 
@@ -1014,26 +993,41 @@ if auth_status:
                         pdf_bytes,
                         {"content-type": "application/pdf"}
                     )
-                    st.success(f"✅ PDF uploaded as '{filename}' to Supabase Storage.")
-                    st.write("Upload response:", response)
+                    if response:
+                        st.success(f"✅ PDF uploaded as '{filename}' to Supabase Storage.")
+                        st.write("Upload response:", response)
+                    else:
+                        st.error("⚠️ No response from Supabase. Upload may have failed silently.")
                     return response
                 except Exception as e:
                     st.error(f"❌ Upload failed: {e}")
                     return None
 
-            # 🚀 Upload Trigger Block
+            # 1️⃣ Generate PDF and store in session state
+            if st.button("🧾 Generate PDF Report"):
+                st.session_state.pdf_buffer = generate_pdf(inputs, results)
+
+            # 2️⃣ Show Download Button and Upload Trigger
             if "pdf_buffer" in st.session_state and st.session_state.pdf_buffer:
+                st.download_button(
+                    label="📄 Download PDF Report",
+                    data=st.session_state.pdf_buffer,
+                    file_name="lng_bunkering_report.pdf",
+                    mime="application/pdf",
+                )
+
                 # 🕒 Generate timestamped filename
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 filename = f"lng_bunkering_report_{timestamp}.pdf"
                 st.write("Filename:", filename)
 
+                # 🚀 Upload Button
                 if st.button("📤 Upload PDF Report to Supabase"):
                     st.write("Upload button clicked")  # Debug trace
                     response = upload_pdf_to_supabase(st.session_state.pdf_buffer.getvalue(), filename)
                     st.write("Upload response:", response)
             else:
-                st.warning("⚠️ No PDF buffer found. Please generate or upload a PDF first.")
+                st.warning("⚠️ No PDF buffer found. Please generate or upload a PDF first.")            
 
     #---------------------------------------------------------------------------------------------------------------------------------
     # PKI MN CALCULATIONS
