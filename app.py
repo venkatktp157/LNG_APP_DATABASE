@@ -1012,6 +1012,7 @@ if auth_status:
                         {"content-type": "application/pdf"}
                     )
                     st.success(f"✅ PDF uploaded as '{filename}' to Supabase Storage.")
+                    st.write("Upload response:", response)  # 👈 Debug output
                 except Exception as e:
                     st.error(f"❌ Upload failed: {e}")
 
