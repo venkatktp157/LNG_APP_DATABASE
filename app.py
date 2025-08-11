@@ -985,6 +985,31 @@ if auth_status:
                 file_name="lng_bunkering_report.pdf",
                 mime="application/pdf",
             )  
+
+            def upload_pdf_to_supabase(pdf_bytes, filename="lng_bunkering_report.pdf"):
+                bucket = "pdf-reports"
+
+                try:
+                    # Step 1: Delete existing file (optional, if overwrite is intended)
+                    supabase.storage.from_(bucket).remove([filename])
+
+                    # Step 2: Upload new PDF
+                    supabase.storage.from_(bucket).upload(
+                        filename,
+                        pdf_bytes,
+                        {"content-type": "application/pdf"}
+                    )
+                    st.success("PDF uploaded to Supabase Storage.")
+                except Exception as e:
+                    st.error(f"Upload failed: {e}")
+
+            uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
+
+            if uploaded_file is not None:
+                pdf_bytes = uploaded_file.read()
+                if st.button("📤 Upload PDF to Supabase"):
+                    upload_pdf_to_supabase(pdf_bytes, filename=uploaded_file.name)                    
+
     #---------------------------------------------------------------------------------------------------------------------------------
     # PKI MN CALCULATIONS
 
