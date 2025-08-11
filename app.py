@@ -985,7 +985,7 @@ if auth_status:
             SUPABASE_KEY = st.secrets["supabase"]["service_role_key"]
             supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-            # 📤 Upload function
+            # 📤 Supabase upload function
             def upload_pdf_to_supabase(pdf_bytes, filename):
                 bucket = "pdf-reports"
                 try:
@@ -994,26 +994,32 @@ if auth_status:
                         pdf_bytes,
                         {"content-type": "application/pdf"}
                     )
-                    if response:
-                        st.success(f"✅ PDF uploaded as '{filename}' to Supabase Storage.")
-                        st.write("Upload response:", response)
-                    else:
-                        st.error("⚠️ No response from Supabase. Upload may have failed silently.")
+                    st.success(f"✅ PDF uploaded as '{filename}'")
                     return response
                 except Exception as e:
                     st.error(f"❌ Upload failed: {e}")
                     return None
 
-            # 🧾 Generate PDF Report
+            # 🧠 Initialize session state
+            if "pdf_buffer" not in st.session_state:
+                st.session_state.pdf_buffer = None
+            if "pdf_ready" not in st.session_state:
+                st.session_state.pdf_ready = False
+
+            # 🧾 Generate PDF
             if st.button("🧾 Generate PDF Report"):
-                st.session_state.pdf_buffer = generate_pdf(inputs, results)
-                st.session_state.pdf_ready = True
+                inputs = {"Fuel Type": "LNG", "Quantity": 5000, "Port": "Singapore"}  # Replace with actual inputs
+                results = {"Methane Number": 78.5, "CO2 Reduction": "12%"}            # Replace with actual results
+                pdf_buffer = generate_pdf(inputs, results)
+                if pdf_buffer:
+                    st.session_state.pdf_buffer = pdf_buffer
+                    st.session_state.pdf_ready = True
+                else:
+                    st.error("⚠️ PDF generation failed.")
+                    st.session_state.pdf_ready = False
 
-            if st.session_state.get("pdf_ready"):
-                st.write("PDF buffer size:", len(st.session_state.pdf_buffer.getvalue()))           
-
-            # ✅ Confirm buffer size (safe across reruns)
-            if st.session_state.get("pdf_ready"):
+            # ✅ Show download and upload buttons
+            if st.session_state.pdf_ready and st.session_state.pdf_buffer:
                 st.write("PDF buffer size:", len(st.session_state.pdf_buffer.getvalue()))
 
                 st.download_button(
@@ -1029,8 +1035,7 @@ if auth_status:
                 if st.button("📤 Upload to Supabase"):
                     response = upload_pdf_to_supabase(st.session_state.pdf_buffer.getvalue(), filename)
                     st.write("Upload response:", response)
-
-    #---------------------------------------------------------------------------------------------------------------------------------
+                #---------------------------------------------------------------------------------------------------------------------------------
     # PKI MN CALCULATIONS
 
     elif mode == "Propane Knock Index (PKI), Methane Number, Density Calculator":
