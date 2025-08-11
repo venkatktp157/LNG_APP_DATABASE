@@ -998,7 +998,7 @@ if auth_status:
                 bucket = "pdf-reports"
                 try:
                     # Upload without deleting old file
-                    supabase.storage.from_(bucket).upload(
+                    response = supabase.storage.from_(bucket).upload(
                         filename,
                         pdf_bytes,
                         {"content-type": "application/pdf"}
